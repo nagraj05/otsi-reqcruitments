@@ -16,7 +16,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { toast } from "sonner";
 
@@ -24,6 +25,9 @@ const sectionsCount = 3;
 const questionsPerSection = 10;
 
 export default function Home() {
+  const searchParams = useSearchParams();
+  const id = searchParams.get('id');
+  
   const [questionPaper, setQuestionPaper] = useState<string>("");
   const [name, setName] = useState<string>("");
   const [sections, setSections] = useState(
@@ -39,8 +43,44 @@ export default function Home() {
       ),
     }))
   );
+  const [loading, setLoading] = useState(!!id);
+  const [isEditMode, setIsEditMode] = useState(!!id);
+  const [recordId, setRecordId] = useState<number | null>(id ? parseInt(id) : null);
 
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      fetchRecord(parseInt(id));
+    }
+  }, [id]);
+
+  const fetchRecord = async (recordId: number) => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("question_papers")
+        .select("*")
+        .eq("id", recordId)
+        .single();
+
+      if (error) throw error;
+      
+      if (data) {
+        setName(data.name);
+        setQuestionPaper(data.question_paper);
+        
+        if (data.sections_data) {
+          setSections(data.sections_data);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching record:", error);
+      toast.error("Error loading the record");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleQuestionTypeChange = (
     sectionIndex: number,
@@ -90,23 +130,46 @@ export default function Home() {
       });
 
       const totalMarks = sectionMarks.reduce((sum, marks) => sum + marks, 0);
-
-      const { error } = await supabase.from("question_papers").insert([
-        {
-          name,
-          question_paper: questionPaper,
-          section_1_marks: sectionMarks[0],
-          section_2_marks: sectionMarks[1],
-          section_3_marks: sectionMarks[2],
-          total_marks: totalMarks,
-          sections_data: sections,
-        },
-      ]);
+      
+      const recordData = {
+        name,
+        question_paper: questionPaper,
+        section_1_marks: sectionMarks[0],
+        section_2_marks: sectionMarks[1],
+        section_3_marks: sectionMarks[2],
+        total_marks: totalMarks,
+        sections_data: sections,
+      };
+      
+      let error;
+      
+      if (isEditMode && recordId) {
+        // Update existing record
+        const result = await supabase
+          .from("question_papers")
+          .update(recordData)
+          .eq("id", recordId);
+          
+        error = result.error;
+        
+        if (!error) {
+          toast.success("Record updated successfully!");
+        }
+      } else {
+        // Insert new record
+        const result = await supabase
+          .from("question_papers")
+          .insert([recordData]);
+          
+        error = result.error;
+        
+        if (!error) {
+          toast.success("Data submitted successfully!");
+          handleClear();
+        }
+      }
 
       if (error) throw error;
-
-      toast.success("Data submitted successfully!");
-      handleClear();
     } catch (error) {
       console.error("Error submitting data:", error);
       toast.error("Error submitting data");
@@ -117,6 +180,9 @@ export default function Home() {
 
   const handleClear = () => {
     setQuestionPaper("");
+    setName("");
+    setIsEditMode(false);
+    setRecordId(null);
     setSections(
       Array.from({ length: sectionsCount }, (_, sectionIndex) => ({
         sectionNumber: sectionIndex + 1,
@@ -131,6 +197,10 @@ export default function Home() {
       }))
     );
   };
+
+  if (loading) {
+    return <div className="p-8 flex justify-center">Loading form data...</div>;
+  }
 
   return (
     <div className="h-[calc(100vh-64px)]">
@@ -159,12 +229,21 @@ export default function Home() {
           </Select>
         </div>
         <div className="flex gap-2">
+          {isEditMode && (
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              className="px-4 py-2"
+            >
+              New Form
+            </Button>
+          )}
           <Button
             onClick={handleSubmitClick}
             className="px-4 py-2"
             disabled={!name || !questionPaper}
           >
-            Submit
+            {isEditMode ? "Update" : "Submit"}
           </Button>
         </div>
       </div>
@@ -237,10 +316,9 @@ export default function Home() {
       <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Confirm Submission</DialogTitle>
+            <DialogTitle>Confirm {isEditMode ? "Update" : "Submission"}</DialogTitle>
             <DialogDescription>
-              Are you sure you want to submit? Once submitted, you cannot modify
-              the data.
+              Are you sure you want to {isEditMode ? "update" : "submit"}? {!isEditMode && "Once submitted, you cannot modify the data."}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -250,7 +328,7 @@ export default function Home() {
             >
               Cancel
             </Button>
-            <Button onClick={handleConfirmSubmit}>Submit</Button>
+            <Button onClick={handleConfirmSubmit}>{isEditMode ? "Update" : "Submit"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

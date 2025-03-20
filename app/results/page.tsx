@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -47,9 +48,11 @@ interface ResultRow {
   section_3_marks: number;
   total_marks: number;
   created_at: string;
+  sections_data: any;
 }
 
 export default function Results() {
+  const router = useRouter();
   const [results, setResults] = useState<ResultRow[]>([]);
   const [filteredResults, setFilteredResults] = useState<ResultRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -99,11 +102,23 @@ export default function Results() {
     setFilteredResults(filtered);
   };
 
+  const handleNameClick = (row: ResultRow) => {
+    // Navigate to the form page with the record ID
+    router.push(`/?id=${row.id}`);
+  };
+
   const columns: ColumnDef<ResultRow>[] = [
     {
       accessorKey: "name",
       header: "Name",
-      cell: ({ row }) => <div>{row.getValue("name")}</div>,
+      cell: ({ row }) => (
+        <div 
+          className="font-semibold hover:underline cursor-pointer"
+          onClick={() => handleNameClick(row.original)}
+        >
+          {row.getValue("name")}
+        </div>
+      ),
     },
     {
       accessorKey: "question_paper",
