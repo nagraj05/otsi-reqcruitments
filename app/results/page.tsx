@@ -305,7 +305,7 @@ export default function Results() {
             </div>
 
             <div className="flex items-end">
-              <Button onClick={applyAdvancedFilters} className="w-full">
+              <Button onClick={applyAdvancedFilters} className="w-full cursor-pointer">
                 Apply Filters
               </Button>
             </div>

@@ -144,7 +144,6 @@ export default function Home() {
       let error;
       
       if (isEditMode && recordId) {
-        // Update existing record
         const result = await supabase
           .from("question_papers")
           .update(recordData)
@@ -156,7 +155,6 @@ export default function Home() {
           toast.success("Record updated successfully!");
         }
       } else {
-        // Insert new record
         const result = await supabase
           .from("question_papers")
           .insert([recordData]);
@@ -218,7 +216,7 @@ export default function Home() {
             onValueChange={(value) => setQuestionPaper(value)}
           >
             <SelectTrigger>
-              <SelectValue placeholder="Select Question Paper" />
+              <SelectValue placeholder="Select Question Paper"/>
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="A">A</SelectItem>
@@ -233,14 +231,14 @@ export default function Home() {
             <Button
               variant="outline"
               onClick={handleClear}
-              className="px-4 py-2"
+              className="px-4 py-2 cursor-pointer"
             >
               New Form
             </Button>
           )}
           <Button
             onClick={handleSubmitClick}
-            className="px-4 py-2"
+            className="px-4 py-2 cursor-pointer"
             disabled={!name || !questionPaper}
           >
             {isEditMode ? "Update" : "Submit"}
@@ -325,10 +323,11 @@ export default function Home() {
             <Button
               variant="outline"
               onClick={() => setShowConfirmDialog(false)}
+              className="cursor-pointer"
             >
               Cancel
             </Button>
-            <Button onClick={handleConfirmSubmit}>{isEditMode ? "Update" : "Submit"}</Button>
+            <Button onClick={handleConfirmSubmit} className="cursor-pointer">{isEditMode ? "Update" : "Submit"}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
