@@ -49,7 +49,9 @@ export default function Home() {
   };
 
   const handleSubmit = () => {
-    console.log("Submitted Questions:", questions);
+    console.log("Submitted Questions:", questionPaper, questions);
+    handleClear();
+    setQuestionPaper("");
   };
 
   return (
@@ -59,7 +61,10 @@ export default function Home() {
           <h1 className="text-xl font-bold text-gray-700">Question Paper:</h1>
           <Select
             value={questionPaper}
-            onValueChange={(value) => setQuestionPaper(value)}
+            onValueChange={(value) => {
+              setQuestionPaper(value);
+              handleClear();
+            }}
           >
             <SelectTrigger className="w-64 border-gray-300 shadow-sm">
               <SelectValue placeholder="Select Question Paper" />
