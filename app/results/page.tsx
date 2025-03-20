@@ -48,7 +48,15 @@ interface ResultRow {
   section_3_marks: number;
   total_marks: number;
   created_at: string;
-  sections_data: any;
+  sections_data: {
+    [key: string]: {
+      marks: number;
+      questions: Array<{
+        question: string;
+        marks: number;
+      }>;
+    };
+  };
 }
 
 export default function Results() {
@@ -58,8 +66,7 @@ export default function Results() {
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  
-  // Advanced filtering states
+
   const [filterType, setFilterType] = useState<string>("all");
   const [filterSection, setFilterSection] = useState<string>("total_marks");
   const [filterLimit, setFilterLimit] = useState<number>(10);
@@ -91,10 +98,12 @@ export default function Results() {
     if (filterType === "top") {
       // Sort by the selected section
       filtered.sort((a, b) => {
-        return b[filterSection as keyof ResultRow] as number - 
-               (a[filterSection as keyof ResultRow] as number);
+        return (
+          (b[filterSection as keyof ResultRow] as number) -
+          (a[filterSection as keyof ResultRow] as number)
+        );
       });
-      
+
       // Limit to the specified number
       filtered = filtered.slice(0, filterLimit);
     }
@@ -103,7 +112,6 @@ export default function Results() {
   };
 
   const handleNameClick = (row: ResultRow) => {
-    // Navigate to the form page with the record ID
     router.push(`/?id=${row.id}`);
   };
 
@@ -112,7 +120,7 @@ export default function Results() {
       accessorKey: "name",
       header: "Name",
       cell: ({ row }) => (
-        <div 
+        <div
           className="font-semibold hover:underline cursor-pointer"
           onClick={() => handleNameClick(row.original)}
         >
@@ -132,7 +140,9 @@ export default function Results() {
           <div className="text-center">
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="px-0"
             >
               Section 1
@@ -152,7 +162,9 @@ export default function Results() {
           <div className="text-center">
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="px-0"
             >
               Section 2
@@ -172,7 +184,9 @@ export default function Results() {
           <div className="text-center">
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="px-0"
             >
               Section 3
@@ -192,7 +206,9 @@ export default function Results() {
           <div className="text-center">
             <Button
               variant="ghost"
-              onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+              onClick={() =>
+                column.toggleSorting(column.getIsSorted() === "asc")
+              }
               className="px-0"
             >
               Total Marks
@@ -202,7 +218,9 @@ export default function Results() {
         );
       },
       cell: ({ row }) => (
-        <div className="text-center font-bold">{row.getValue("total_marks")}</div>
+        <div className="text-center font-bold">
+          {row.getValue("total_marks")}
+        </div>
       ),
     },
   ];
@@ -229,16 +247,20 @@ export default function Results() {
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-bold">Results</h1>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Advanced Filters</CardTitle>
-          <CardDescription>Filter results by top performers in each section</CardDescription>
+          <CardDescription>
+            Filter results by top performers in each section
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="text-sm font-medium mb-1 block">Filter Type</label>
+              <label className="text-sm font-medium mb-1 block">
+                Filter Type
+              </label>
               <Select
                 value={filterType}
                 onValueChange={(value) => setFilterType(value)}
@@ -252,7 +274,7 @@ export default function Results() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-1 block">Section</label>
               <Select
@@ -270,7 +292,7 @@ export default function Results() {
                 </SelectContent>
               </Select>
             </div>
-            
+
             <div>
               <label className="text-sm font-medium mb-1 block">Show Top</label>
               <Input
@@ -281,7 +303,7 @@ export default function Results() {
                 placeholder="Number of results"
               />
             </div>
-            
+
             <div className="flex items-end">
               <Button onClick={applyAdvancedFilters} className="w-full">
                 Apply Filters
@@ -290,7 +312,7 @@ export default function Results() {
           </div>
         </CardContent>
       </Card>
-      
+
       <div className="flex items-center py-4">
         <Input
           placeholder="Filter by name..."
@@ -301,7 +323,7 @@ export default function Results() {
           className="max-w-sm"
         />
       </div>
-      
+
       <div className="rounded-md border">
         <Table>
           <TableHeader>
@@ -329,14 +351,20 @@ export default function Results() {
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id}>
-                      {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                      {flexRender(
+                        cell.column.columnDef.cell,
+                        cell.getContext()
+                      )}
                     </TableCell>
                   ))}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={columns.length} className="h-24 text-center">
+                <TableCell
+                  colSpan={columns.length}
+                  className="h-24 text-center"
+                >
                   No results found.
                 </TableCell>
               </TableRow>
@@ -344,7 +372,7 @@ export default function Results() {
           </TableBody>
         </Table>
       </div>
-      
+
       <div className="flex items-center justify-end space-x-2 py-4">
         <Button
           variant="outline"
