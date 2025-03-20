@@ -23,6 +23,20 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowUpDown } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 interface ResultRow {
   id: number;
@@ -37,9 +51,15 @@ interface ResultRow {
 
 export default function Results() {
   const [results, setResults] = useState<ResultRow[]>([]);
+  const [filteredResults, setFilteredResults] = useState<ResultRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  
+  // Advanced filtering states
+  const [filterType, setFilterType] = useState<string>("all");
+  const [filterSection, setFilterSection] = useState<string>("total_marks");
+  const [filterLimit, setFilterLimit] = useState<number>(10);
 
   useEffect(() => {
     fetchResults();
@@ -54,11 +74,29 @@ export default function Results() {
 
       if (error) throw error;
       setResults(data || []);
+      setFilteredResults(data || []);
     } catch (error) {
       console.error("Error fetching results:", error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyAdvancedFilters = () => {
+    let filtered = [...results];
+
+    if (filterType === "top") {
+      // Sort by the selected section
+      filtered.sort((a, b) => {
+        return b[filterSection as keyof ResultRow] as number - 
+               (a[filterSection as keyof ResultRow] as number);
+      });
+      
+      // Limit to the specified number
+      filtered = filtered.slice(0, filterLimit);
+    }
+
+    setFilteredResults(filtered);
   };
 
   const columns: ColumnDef<ResultRow>[] = [
@@ -155,7 +193,7 @@ export default function Results() {
   ];
 
   const table = useReactTable({
-    data: results,
+    data: filteredResults,
     columns,
     getCoreRowModel: getCoreRowModel(),
     onSortingChange: setSorting,
@@ -176,6 +214,67 @@ export default function Results() {
   return (
     <div className="p-4 space-y-4">
       <h1 className="text-2xl font-bold">Results</h1>
+      
+      <Card>
+        <CardHeader>
+          <CardTitle>Advanced Filters</CardTitle>
+          <CardDescription>Filter results by top performers in each section</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Filter Type</label>
+              <Select
+                value={filterType}
+                onValueChange={(value) => setFilterType(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select filter type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Results</SelectItem>
+                  <SelectItem value="top">Top Performers</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Section</label>
+              <Select
+                value={filterSection}
+                onValueChange={(value) => setFilterSection(value)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select section" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="total_marks">Total Marks</SelectItem>
+                  <SelectItem value="section_1_marks">Section 1</SelectItem>
+                  <SelectItem value="section_2_marks">Section 2</SelectItem>
+                  <SelectItem value="section_3_marks">Section 3</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div>
+              <label className="text-sm font-medium mb-1 block">Show Top</label>
+              <Input
+                type="number"
+                min="1"
+                value={filterLimit}
+                onChange={(e) => setFilterLimit(parseInt(e.target.value) || 10)}
+                placeholder="Number of results"
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <Button onClick={applyAdvancedFilters} className="w-full">
+                Apply Filters
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       
       <div className="flex items-center py-4">
         <Input
