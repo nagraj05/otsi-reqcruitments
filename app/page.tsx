@@ -63,7 +63,6 @@ export default function Home() {
   };
 
   const handleSubmitClick = () => {
-    // Check if all questions have both type and marks
     const hasIncompleteQuestions = sections.some((section) =>
       section.questions.some(
         (question) =>
@@ -92,7 +91,7 @@ export default function Home() {
 
       const totalMarks = sectionMarks.reduce((sum, marks) => sum + marks, 0);
 
-      const { data, error } = await supabase.from("question_papers").insert([
+      const { error } = await supabase.from("question_papers").insert([
         {
           name,
           question_paper: questionPaper,
