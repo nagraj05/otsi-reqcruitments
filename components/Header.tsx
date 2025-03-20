@@ -16,9 +16,14 @@ export default function Header() {
         onClick={() => router.push("/")}
         className="cursor-pointer"
       />
-      <Button variant="outline" asChild>
-        <Link href="/results">Results</Link>
-      </Button>
+      <div className="flex gap-2">
+        <Button>
+          <Link href="/">Form</Link>
+        </Button>
+        <Button variant="outline" asChild>
+          <Link href="/results">Results</Link>
+        </Button>
+      </div>
     </div>
   );
 }
